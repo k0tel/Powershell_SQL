@@ -1,5 +1,3 @@
-#- PRIVATE SECTION ---------------------------------------------------------------------------------------------
-
 # cache variable for global log data
 $global:content = ""
 
@@ -27,8 +25,6 @@ function LogMsg {
     
     return "$dateTime;$Type;$User;$Text$messageSeparator"
 }
-
-#- PUBLIC VISIBLE SECTION ----------------------------------------------------------------------------------------
 
 <#
     .Synopsis
