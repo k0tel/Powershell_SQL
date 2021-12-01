@@ -1,7 +1,3 @@
-﻿#  VERSION : 1.23
-#  AUTOR   : Matěj Kotlín  
-#  UPDATED : 11.05.2016
-
 #- PRIVATE SECTION -----------------------------------------------------------------------------------------------
 
 $noConnections      = 'Please fill the Connection string or SQLConnection!'
