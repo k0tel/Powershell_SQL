@@ -1,5 +1,3 @@
-#- PRIVATE SECTION -----------------------------------------------------------------------------------------------
-
 $noConnections      = 'Please fill the Connection string or SQLConnection!'
 $noConnectionString = 'Please fill the Connection string!'
 $noCommand          = 'Please fill the Command!'
@@ -24,8 +22,7 @@ function Add-SQLCommandParameter {
         [Hashtable]                        $Params  = @{}
     )
 
-    foreach($p in $Params.Keys)
-    {
+    foreach($p in $Params.Keys) {
         $Command.Parameters.AddWithValue('@' + $p, $Params[$p]) | Out-Null 
         $paramString += $paramDelim + '@' + $p + '=' + $Params[$p]
         $paramDelim = ', '
@@ -35,11 +32,6 @@ function Add-SQLCommandParameter {
 
     return $Command
 }
-
-
-#-----------------------------------------------------------------------------------------------------------------
-
-#- PUBLIC SECTION ------------------------------------------------------------------------------------------------
 
 function Inovke-Error {
     Param (
@@ -53,7 +45,7 @@ function Inovke-Error {
 
 <#
 .SYNOPSIS
-    Otevře SQL connection dle zadaneho connection stringu
+    Open SQL connection by Connection string
 #>
 function Invoke-SQLStartConnection {
      Param (
@@ -62,8 +54,7 @@ function Invoke-SQLStartConnection {
     
     Write-Verbose 'SQL Connection: Creating connection'
 
-    try
-    {
+    try {
         $sql = New-Object Data.SqlClient.SqlConnection
         $sql.ConnectionString = $ConnectionString
         $sql.Open() | Out-Null
@@ -78,7 +69,7 @@ function Invoke-SQLStartConnection {
 
 <#
 .SYNOPSIS
-    Zavře SQL connection
+    Close SQL connection
 #>
 function Invoke-SQLEndConnection {
      Param (
@@ -87,8 +78,7 @@ function Invoke-SQLEndConnection {
     
     Write-Verbose 'SQL Connection: Disposing connection'
 
-    if ($SQLConnection)
-    {
+    if ($SQLConnection) {
         $SQLConnection.Dispose() | Out-Null
     }
 }
@@ -96,16 +86,14 @@ function Invoke-SQLEndConnection {
 
 <#
 .SYNOPSIS
-    Vytvoří nový SQL Command
-    - Nejprve se vytvori SQL Connection dle zadaneho Connection stringu respektive SQLConnection
-    - Pote se vytvori SQL Command se zadanyma parametrama
+    Make new SQL Command
+    - Create SQL connection by connection string 
+    - Create SQL command with parameters
 #>
 function Invoke-SQLStartCommand {
      Param (
-        # pri zadani SQLConnection se pocita s tim ze SQL je pripojeno
         [Data.SqlClient.SqlConnection] $SQLConnection,
 
-        # pri zadani ConnectionStringu si funkce vytvori svoje pripojeni 
         [String]                       $ConnectionString,
         [string]                       $CommandType = $(throw $noCommandType),
         [int]                          $CommandTimeout = 30,
@@ -114,17 +102,14 @@ function Invoke-SQLStartCommand {
     
     Write-Verbose "SQL Command: Creating new command"
 
-    if ($ConnectionString) 
-    { 
+    if ($ConnectionString) { 
         $SQLConnection = Invoke-SQLStartConnection -ConnectionString $ConnectionString
     }
-    elseif (-not $SQLConnection) 
-    {
+    elseif (-not $SQLConnection) {
         throw $noConnections
     }
 
-    try
-    {
+    try {
         $cmd = New-Object System.Data.SqlClient.SqlCommand
         $cmd.Connection = $SQLConnection
         $cmd = $SQLConnection.CreateCommand()
@@ -145,7 +130,7 @@ function Invoke-SQLStartCommand {
 
 <#
 .SYNOPSIS
-    Zavře SQL Command a dle prepinace $CloseSQLConnection bud uzavre SQL Connection nebo nikoliv
+    Close SQL Command and by parameter $CloseSQLConnection close or not active connection
 #>
 function Invoke-SQLEndCommand {
      Param (
@@ -155,13 +140,11 @@ function Invoke-SQLEndCommand {
 
     Write-Verbose "SQL Command: Disposing"
     
-    if ($Command)
-    {
+    if ($Command) {
         $Command.Dispose() | Out-Null
     }
 
-    if ($CloseSQLConnection)
-    {
+    if ($CloseSQLConnection) {
         Invoke-SQLEndConnection -SQLConnection $Command.Connection
     }
 }
@@ -169,12 +152,11 @@ function Invoke-SQLEndCommand {
 
 <#
 .SYNOPSIS
-    Zavolani stored procedure na DB 
-    - Zalozi SQL Connection spolu s SQL Commandem a po zavolani procedury Command i Connection uzavre podle toho jestli je to zadane
+    Invoke stored procedure on DB
+    - Create SQL connection with a SQL command and invoke procedure, after that close or not command and connection (by parameters)
 #>
 function Invoke-SQLStoredProcedure {
      Param (
-        # pri zadani SQLConnection se pocita s tim ze SQL je pripojeno
         [Data.SqlClient.SqlConnection] $SQLConnection,
 
         [String]    $ConnectionString,
@@ -185,12 +167,10 @@ function Invoke-SQLStoredProcedure {
     
     try 
     {
-        if ($ConnectionString) 
-        {
+        if ($ConnectionString) {
             $SQLConnection = Invoke-SQLStartConnection -ConnectionString $ConnectionString
         }
-        elseif (-not $SQLConnection) 
-        {
+        elseif (-not $SQLConnection) {
             throw $noConnections
         }
 
@@ -220,36 +200,31 @@ function Invoke-SQLStoredProcedure {
 
 <#
 .SYNOPSIS
-    Zavolani jednoho query do DB
-    - Zalozi SQL Connection spolu s SQL Commandem a po zavolani procedury Command i Connection uzavre
+    Invoke query into DB
+    - Create SQL connection with SQL command and after query close command and connection by parameters
 #>
 function Invoke-SQLQuery {
     Param ( 
-        # pri zadani SQLConnection se pocita s tim ze SQL je pripojeno
         [Data.SqlClient.SqlConnection] $SQLConnection,
 
-		[string]    $ConnectionString,
+	[string]    $ConnectionString,
         [string]    $Query              = $(throw $noQuery),
         [Hashtable] $Params             = @{},
         [bool]      $CloseSQLConnection = $true
 	) 
     
-    try
-    {
-        if ($ConnectionString) 
-        {
+    try {
+        if ($ConnectionString) {
             $SQLConnection = Invoke-SQLStartConnection -ConnectionString $ConnectionString
         }
-        elseif (-not $SQLConnection) 
-        {
+        elseif (-not $SQLConnection) {
             throw $noConnections
         }
 
         $cmd = Invoke-SQLStartCommand -SQLConnection $SQLConnection -CommandType 'Text' -CommandText $Query
 
-        # pokud existuji nejake parametry
-        if ($Params) 
-        {
+	# if exist any parameter 
+        if ($Params) {
             Add-SQLCommandParameter -Command $cmd -Params $Params
         }
     
@@ -275,7 +250,7 @@ function Invoke-SQLQuery {
 
 <#
 .SYNOPSIS
-    Funkce dropne tabulku z DB
+    Function for dropping table from DB
 #>
 function Invoke-SQLDropTable {
     Param (
@@ -296,7 +271,7 @@ function Invoke-SQLDropTable {
 
 <#
 .SYNOPSIS
-    Funkce kompletne vymaze obsah tabulky
+    Function for completly clean table (truncate)
 #>
 function Invoke-SQLTruncateTable {
     Param (
@@ -317,7 +292,7 @@ function Invoke-SQLTruncateTable {
 
 <#
 .SYNOPSIS
-    Funkce provede Full backup databaze na zadane umisteni
+    Function for full backup DB into selected path
 #>
 function Invoke-SQLBackupDatabaseFull {
     Param (
@@ -339,7 +314,7 @@ function Invoke-SQLBackupDatabaseFull {
 
 <#
 .SYNOPSIS
-    Funkce dle zadaneho jména tabulky provede kompletní kopii
+    Function which by name of table create copy of that table
 #>
 function Invoke-SQLCopyTable {
     Param (
