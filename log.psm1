@@ -1,8 +1,3 @@
-﻿#  VERSION : 1.03
-#  AUTOR   : Matěj Kotlín  
-#  CREATED : 26.06.2016
-#  UPDATE  : - add username into log message
-
 #- PRIVATE SECTION ---------------------------------------------------------------------------------------------
 
 # cache variable for global log data
